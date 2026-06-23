@@ -179,7 +179,6 @@ body {
 .tab-view {
   display: none;
   flex-direction: column;
-  height: 100%;
 }
 
 .tab-view.active {
@@ -258,7 +257,7 @@ body {
   padding: 10px;
   cursor: pointer;
   user-select: none;
-  touch-action: none; /* Evita zoom y doble click en celulares */
+  touch-action: pan-y; /* Permite scroll vertical pero evita zoom y doble click */
   transition: transform 0.05s ease, box-shadow 0.1s ease, background-color 0.15s ease;
   border: 2px solid transparent;
   background-clip: padding-box;
@@ -542,13 +541,16 @@ body {
   background: var(--bg-glass);
   border: 1px solid var(--border-glass);
   border-radius: 12px;
-  overflow: hidden;
+  overflow-x: auto; /* Permite scroll horizontal en moviles */
+  overflow-y: hidden;
   margin-bottom: 20px;
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+  -webkit-overflow-scrolling: touch; /* Scroll suave en iOS */
 }
 
 .db-table {
   width: 100%;
+  min-width: 440px; /* Evita que las columnas colapsen en pantallas angostas */
   border-collapse: collapse;
   text-align: left;
   font-size: 0.85rem;

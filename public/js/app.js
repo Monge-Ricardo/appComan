@@ -134,14 +134,26 @@ function renderPads() {
   container.appendChild(undoPad);
 }
 
-// Configurar los eventos de clic y pulsación larga (600ms)
+// Configurar los eventos de clic y pulsación larga (600ms) con cancelación por arrastre
 function setupPadEvents(padElement, student) {
   let pressTimer = null;
   let didLongPress = false;
+  let startX = 0;
+  let startY = 0;
+  let isCancelled = false;
   const longPressDuration = 600; // Milisegundos para registrar punto extra
 
   const startPress = (e) => {
-    e.preventDefault();
+    // Para touch, registrar coordenadas iniciales
+    if (e.touches && e.touches[0]) {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+    } else {
+      // Para mouse, registrar coordenadas iniciales
+      startX = e.clientX;
+      startY = e.clientY;
+    }
+    isCancelled = false;
     didLongPress = false;
     padElement.classList.add('holding');
     padElement.classList.add('active');
@@ -157,7 +169,28 @@ function setupPadEvents(padElement, student) {
     }, longPressDuration);
   };
 
+  const movePress = (e) => {
+    if (isCancelled) return;
+    
+    let currentX, currentY;
+    if (e.touches && e.touches[0]) {
+      currentX = e.touches[0].clientX;
+      currentY = e.touches[0].clientY;
+    } else {
+      currentX = e.clientX;
+      currentY = e.clientY;
+    }
+
+    const distance = Math.hypot(currentX - startX, currentY - startY);
+    // Si se desliza más de 12px, cancelar la pulsación (evita registrar punto al hacer scroll)
+    if (distance > 12) {
+      cancelPress(e);
+    }
+  };
+
   const endPress = (e) => {
+    if (isCancelled) return;
+    
     e.preventDefault();
     clearTimeout(pressTimer);
     padElement.classList.remove('holding');
@@ -170,6 +203,7 @@ function setupPadEvents(padElement, student) {
   };
 
   const cancelPress = (e) => {
+    isCancelled = true;
     clearTimeout(pressTimer);
     padElement.classList.remove('holding');
     padElement.classList.remove('active');
@@ -177,13 +211,17 @@ function setupPadEvents(padElement, student) {
   };
 
   // Eventos Tactiles (Móviles)
-  padElement.addEventListener('touchstart', startPress, { passive: false });
+  padElement.addEventListener('touchstart', startPress, { passive: true });
+  padElement.addEventListener('touchmove', movePress, { passive: true });
   padElement.addEventListener('touchend', endPress, { passive: false });
   padElement.addEventListener('touchcancel', cancelPress, { passive: false });
 
   // Eventos Mouse (Escritorio / Fallback)
   padElement.addEventListener('mousedown', (e) => {
     if (!isTouchDevice) startPress(e);
+  });
+  padElement.addEventListener('mousemove', (e) => {
+    if (!isTouchDevice && pressTimer) movePress(e);
   });
   padElement.addEventListener('mouseup', (e) => {
     if (!isTouchDevice) endPress(e);
