@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Comandante Drum Pads - Web Design</title>
+  <!-- Google Fonts: Orbitron para estilo sintetizador/pad y Inter para UI limpia -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Meta tags para optimizacion movil y PWA-ready -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0b0e14">
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Encabezado de la App -->
+    <header class="app-header">
+      <div class="logo-area">
+        <i class="fa-solid fa-drum logo-icon"></i>
+        <h1>COMANDANTE <span>PADS 24</span></h1>
+      </div>
+      <div class="volume-control" id="volume-toggle" title="Activar/Desactivar Sonido">
+        <i class="fa-solid fa-volume-high" id="volume-icon"></i>
+      </div>
+    </header>
+
+    <!-- Barra de Navegación de Pestañas -->
+    <nav class="app-nav">
+      <button class="nav-tab active" id="tab-pads-btn" onclick="switchTab('pads')">
+        <i class="fa-solid fa-grip"></i> PADS
+      </button>
+      <button class="nav-tab" id="tab-db-btn" onclick="switchTab('db')">
+        <i class="fa-solid fa-database"></i> BASE DE DATOS
+      </button>
+    </nav>
+
+    <!-- Contenido Principal -->
+    <main class="app-content">
+      
+      <!-- PESTAÑA 1: DRUM PADS -->
+      <section id="view-pads" class="tab-view active">
+        <div class="pad-info-bar">
+          <div class="instructions">
+            <span><i class="fa-solid fa-pointer"></i> Tap: +1 Part.</span>
+            <span><i class="fa-solid fa-hand-pointer"></i> Press: +1 Extra</span>
+          </div>
+          <div class="active-student-display" id="activity-display">
+            LISTO PARA GRABAR PUNTOS
+          </div>
+        </div>
+
+        <!-- Grid de Pads -->
+        <div class="pads-grid" id="pads-container">
+          <!-- Los 17 pads de estudiantes y el pad de Undo serán inyectados dinámicamente por JS -->
+          <div class="pad-skeleton">Cargando pads...</div>
+        </div>
+      </section>
+
+      <!-- PESTAÑA 2: BASE DE DATOS -->
+      <section id="view-db" class="tab-view">
+        <div class="db-controls">
+          <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="db-search" placeholder="Buscar por apellido..." oninput="filterStudents()">
+          </div>
+          <div class="sort-box">
+            <label for="db-sort"><i class="fa-solid fa-arrow-down-wide-short"></i> Orden:</label>
+            <select id="db-sort" onchange="renderDBTable()">
+              <option value="id">Número de Lista</option>
+              <option value="lastname">Apellido (A-Z)</option>
+              <option value="participations">Participaciones (Máx)</option>
+              <option value="extra_points">Puntos Extra (Máx)</option>
+              <option value="total">Total de Puntos (Máx)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="db-actions">
+          <button class="btn btn-export" onclick="exportCSV()">
+            <i class="fa-solid fa-file-csv"></i> Exportar CSV
+          </button>
+          <button class="btn btn-reset" onclick="openResetModal()">
+            <i class="fa-solid fa-trash-can"></i> Reiniciar Todo
+          </button>
+        </div>
+
+        <!-- Tabla de Datos Responsiva -->
+        <div class="table-container">
+          <table class="db-table">
+            <thead>
+              <tr>
+                <th style="width: 10%">N°</th>
+                <th style="width: 40%">Estudiante</th>
+                <th style="width: 20%">Participaciones</th>
+                <th style="width: 20%">Puntos Extra</th>
+                <th style="width: 10%">Total</th>
+              </tr>
+            </thead>
+            <tbody id="db-table-body">
+              <!-- Datos inyectados por JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Historial de logs recientes -->
+        <div class="history-section">
+          <h3><i class="fa-solid fa-clock-rotate-left"></i> Historial Reciente (Últimas 5 acciones)</h3>
+          <ul class="history-list" id="history-log-list">
+            <li class="empty-history">No hay acciones registradas en esta sesión.</li>
+          </ul>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Footer Informativo -->
+    <footer class="app-footer">
+      <p>&copy; 2026 Web Design - Cmdte. App</p>
+    </footer>
+  </div>
+
+  <!-- MODAL DE CONFIRMACIÓN PARA REINICIAR -->
+  <div class="modal-overlay" id="reset-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <i class="fa-solid fa-triangle-exclamation warning-icon"></i>
+        <h2>¿Reiniciar Puntos?</h2>
+      </div>
+      <div class="modal-body">
+        <p>Esta acción restablecerá a <strong>CERO (0)</strong> todas las participaciones y puntos extra de los 17 estudiantes de forma permanente.</p>
+        <p class="warning-text">¡El historial de logs también será borrado!</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-cancel" onclick="closeResetModal()">Cancelar</button>
+        <button class="btn btn-confirm-reset" onclick="confirmResetDB()">Sí, Reiniciar Todo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="js/audio.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
